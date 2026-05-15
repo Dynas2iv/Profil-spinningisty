@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Spiningisty - Forum</title>
+   <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="baner">
+        
+        <header>
+           Profil Spiningisty
+        </header>
+
+        <nav>
+            <ul>
+                 <li><a href="index.html"><b>Strona Główna</b></a></li>
+                <li><a href="wedki.html"><b>Wędki</b></a></li>
+                <li><a href="kolowrotki.html"><b>Kołowrotki</b></a></li>
+                <li><a href="przynety.html"><b>Przynęty</b></a></li>
+                <li><a href="plecionki.html"><b>Plecionki</b></a></li> 
+                 <li><a href="wezły.html"><b>Węzły</b></a></li>
+                <li><a href="forum.html"><b>Forum</b></a></li>
+                <li><a href="Batymetria.html"><b>Batymetria</b></a></li>
+            </ul>
+        </nav>
+    
+<main>
+    <article>
+        <div class="przycisk">  
+            <script src="https://elfsightcdn.com/platform.js" async></script>
+            <div class="elfsight-app-5748252d-5e99-4d62-b13a-4132ff7154f5" data-elfsight-app-lazy></div>
+        </div>          
+        
+        <div class="opis-strony">
+            Zasady Galerii "Życiówki":<br>
+            Kultura: Szanujemy innych wędkarzy i ich zdobycze.<br>
+            Temat: Dodajemy tylko zdjęcia swoich największych ryb z krótkim opisem.<br>
+            Etyka: Pamiętaj o szacunku do ryb – zachęcamy do ostrożnego obchodzenia się ze zdobyczą.<br>
+        </div>
+    </article>
+    
+    <article>
+        <div class="opis-strony">DODAJ SWOJĄ ŻYCIÓWKĘ</div>
+        
+        <div class="formularz-forum">
+            <input type="text" id="nick" placeholder="Twój nick...">
+            
+            
+            <label for="zdjecie" style="display:block; margin: 10px 0; font-weight: bold;">Dodaj zdjęcie ryby:</label>
+            <input type="file" id="zdjecie" accept="image/*" style="margin-bottom: 15px;">
+            
+           
+            <textarea id="tresc" placeholder="Krótki opis (np. Szczupak 100cm, złowiony z opadu na gumę, łowisko PZW...)"></textarea>
+            
+            <div class="regulamin-row">
+                <input type="checkbox" id="regulamin">
+                <label for="regulamin">Akceptuję regulamin galerii</label>
+            </div>
+            
+            <button class="przycisk-forum" onclick="dodajWpis()">Opublikuj okaz</button>
+        </div>
+        
+        <div class="kategoria">GALERIA OKAZÓW</div>
+        <div id="lista-postow"></div>
+    </article>
+</main>
+
+<script>
+   
+    document.addEventListener("DOMContentLoaded", function() {
+        zaladujPosty();
+    });
+
+    function dodajWpis() {
+        let nick = document.getElementById('nick').value;
+        let wiadomosc = document.getElementById('tresc').value;
+        let czyZaakceptowano = document.getElementById('regulamin').checked;
+        let plikZdjecia = document.getElementById('zdjecie').files[0]; 
+
+        
+        if (nick === "" || wiadomosc === "" || !plikZdjecia) {
+            alert("Uzupełnij nick, opis i koniecznie dodaj zdjęcie ryby!");
+            return;
+        }
+        if (czyZaakceptowano === false) {
+            alert("Musisz zaakceptować regulamin, aby dodać post!");
+            return; 
+        }
+
+       
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let dataUrlZdjecia = e.target.result; 
+            let data = new Date().toLocaleDateString(); 
+
+         
+            let nowyPost = {
+                nick: nick,
+                data: data,
+                opis: wiadomosc,
+                zdjecie: dataUrlZdjecia
+            };
+
+            zapiszPostWPrzegladarce(nowyPost);
+            stworzKodHTMLPosta(nowyPost, true);
+
+          
+            document.getElementById('tresc').value = "";
+            document.getElementById('zdjecie').value = "";
+        };
+        // Odpalamy czytanie pliku
+        reader.readAsDataURL(plikZdjecia);
+    }
+
+    
+    function zapiszPostWPrzegladarce(post) {
+        let zapisane = JSON.parse(localStorage.getItem("galeriaRyb")) || [];
+        zapisane.unshift(post); // Dodajemy nowy post na sam początek listy
+        
+        try {
+            localStorage.setItem("galeriaRyb", JSON.stringify(zapisane));
+        } catch (e) {
+            
+            alert("Pamięć przeglądarki jest pełna! Nie można zapisać więcej zdjęć.");
+        }
+    }
+
+    
+    function zaladujPosty() {
+        let zapisane = JSON.parse(localStorage.getItem("galeriaRyb")) || [];
+        let lista = document.getElementById('lista-postow');
+        lista.innerHTML = ""; // Czyścimy listę na start
+        
+        zapisane.forEach(post => {
+            stworzKodHTMLPosta(post, false);
+        });
+    }
+
+  
+    function stworzKodHTMLPosta(post, naPoczatek = true) {
+        let lista = document.getElementById('lista-postow');
+        
+      
+        let postHTML = `
+            <div class="post" style="border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px;">
+                <div class="post-header" style="margin-bottom: 10px;">
+                    <strong>Użytkownik: ${post.nick}</strong> | 
+                    <small>Data: ${post.data}</small>
+                </div>
+                <div class="post-zdjecie">
+                    <img src="${post.zdjecie}" alt="Ryba użytkownika ${post.nick}" style="max-width: 100%; height: auto; border-radius: 5px; margin-bottom: 10px;">
+                </div>
+                <div class="post-tresc">
+                    ${post.opis}
+                </div>
+            </div>
+        `;
+
+        if (naPoczatek) {
+            lista.innerHTML = postHTML + lista.innerHTML;
+        } else {
+            lista.innerHTML += postHTML;
+        }
+    }
+</script>
+ <footer>
+            stronę stworzył: Piotr Janasz
+        </footer>
+
+
+</body>
+</html>
